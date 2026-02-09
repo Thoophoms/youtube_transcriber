@@ -1,0 +1,13 @@
+# Environment variables
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Temporary files
+temp/
+
+# OS files
+.DS_Store
