@@ -28,7 +28,7 @@
 - [✅] API Key
 - [✅] Deploy on Streamlit cloud
 - [✅] Push to GitHub
-
+- [✅] Deploy frontend on Streamlit
 ## TODO 5 - ZIP file creation
 
 ## TODO 6 - Error handling (invalid links, duration check, Duplicate Links)

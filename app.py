@@ -56,6 +56,9 @@ with col2:
                 'format': 'bestaudio/best',
                 'outtmpl': f'{TEMP_DIR}/%(title)s.%(ext)s',
                 'quiet': True,
+                'no_warnings': True,
+                'extract_flat': False,
+                 'nocheckcertificate': True,
             }
 
             # Clear/Store completed transcripts

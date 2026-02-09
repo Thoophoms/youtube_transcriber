@@ -67,3 +67,4 @@ Trisha Supannopaj
 ---
 
 *Built as part of my AI Engineering portfolio*
+*The app works locally, and this is a known YouTube API limitation*
