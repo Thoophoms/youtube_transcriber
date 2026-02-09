@@ -75,6 +75,6 @@ Initially built with YouTube download functionality using yt-dlp. Pivoted to dir
 ---
 
 *Built as part of my AI Engineering portfolio • Showcasing API integration, file handling, and deployment skills*
-```
+
 
 ---
