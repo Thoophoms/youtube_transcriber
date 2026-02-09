@@ -14,131 +14,114 @@ TEMP_DIR = "temp"
 if not os.path.exists(TEMP_DIR):
     os.makedirs(TEMP_DIR)
 
-st.title("🎥 YouTube Transcriber")
-st.write("Convert YouTube videos to text transcripts!")
+st.title("🎥 Audio/Video Transcriber")
+st.write("Convert audio/video files to text transcripts!")
 
-# initialize session.state for storing links
-if "links" not in st.session_state:
-    st.session_state.links = []
+
 # initialize session.state for storing transcripts
 if "transcripts" not in st.session_state:
     st.session_state.transcripts = []
 
 
-# input box
-link = st.text_input("Enter YouTube link:", key="link_input")
+# # input box
+# link = st.text_input("Enter YouTube link:", key="link_input")
+
+# File Upload inbox
+st.write("**Upload audio/video files:**")
+uploaded_files = st.file_uploader(
+    label="Choose audio or video files",
+    type=['mp3', 'wav', 'm4a', 'mp4', 'webm', 'ogg'],
+    accept_multiple_files=True,
+    help="Upload audio or video files to transcribe"
+)
 
 # Button side by side
-col1, col2 = st.columns(2)
+# col1, col2 = st.columns(2)
 
-with col1:
-    if st.button("Add to the Download List"):
-        # Only add if there's something in the input box
-        if link: 
-            st.session_state.links.append(link)
-            st.success(f"Added link! Total: {len(st.session_state.links)}")
+# with col2:
+if st.button("Transcribe"):
+    if uploaded_files:
+        import assemblyai as aai
+        import time
 
-with col2:
-    if st.button("Download"):
-        if st.session_state.links:
+        # Configure AssemblyAI
+        aai.settings.api_key = ASSEMBLYAI_API_KEY
 
-            import yt_dlp
-            import assemblyai as aai
-            import time
+        st.write("**Processing files...**")
 
-            # Configure AssemblyAI
-            aai.settings.api_key = ASSEMBLYAI_API_KEY
+        # Clear/Store completed transcripts
+        st.session_state.transcripts = []
 
-            st.write("**Processing videos...**")
+        # Process each uploaded file
+        for i, uploaded_file in enumerate(uploaded_files, 1):
+            st.write(f"### 🎵 File {i}/{len(uploaded_files)}: {uploaded_file.name}")
 
-            # Configure yt-dlp options
-            yt_opts = {
-                'format': 'bestaudio/best',
-                'outtmpl': f'{TEMP_DIR}/%(title)s.%(ext)s',
-                'quiet': True,
-                'no_warnings': True,
-                'extract_flat': False,
-                 'nocheckcertificate': True,
-            }
+            try:
+                # Save uploaded file to temp folder
+                temp_filename = f"{TEMP_DIR}/uploaded_{i}_{uploaded_file.name}"
 
-            # Clear/Store completed transcripts
-            st.session_state.transcripts = []
+                # Save to disk
+                with open(temp_filename, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                
+                st.success(f"✅ File saved!")
 
-            # Download each link
-            with yt_dlp.YoutubeDL(yt_opts) as ydl:
-                for i, link in enumerate(st.session_state.links, 1):
-                    st.write(f"### 🎥 Video {i}/{len(st.session_state.links)}")
+                # Upload to AssemblyAI and transcribe
+                st.write(f"☁️ Uploading to AssemblyAI...")
+                transcriber = aai.Transcriber()
+                config = aai.TranscriptionConfig(
+                    speech_models=['universal-2'],
+                    language_detection=True
+                )
 
-                    try:
-                        # 1: Download audio from YouTube
-                        st.write(f"⬇️ Downloading audio...")
-                        info = ydl.extract_info(link, download=True)
-                        audio_filename = ydl.prepare_filename(info)
-                        st.success(f"✅ Downloaded!")
+                # Wait for transcription (pooing happens automatically!)
+                st.write(f"🤖 Transcribing... (this may take a minute)")
+                
+                # Now file name is the path that we can pass it to AssemblyAI
+                transcript = transcriber.transcribe(temp_filename, config=config)
 
-                        # 2: Upload to AssemblyAI
-                        st.write(f"☁️ Uploading to AssemblyAI...")
-                        transcriber = aai.Transcriber()
-                        config = aai.TranscriptionConfig(
-                            speech_models=['universal-2'],
-                            language_detection=True
-                            )
-                        transcript = transcriber.transcribe(audio_filename, config=config)
-         
+                # 4: Check if successul
+                if transcript.status == aai.TranscriptStatus.error:
+                    st.error(f"❌ Transcription failed: {transcript.error}")
+                else:
+                    st.success(f"✅ Transcription complete!")
 
-                        #3: Wait for transcription (pooing happens automatically!)
-                        st.write(f"🤖 Transcribing... (this may take a minute)")
+                # Save Transcript info
+                st.session_state.transcripts.append({
+                    'filename': f"transcript_{i}_{uploaded_file.name.rsplit('.', 1)[0]}.txt",
+                    'text': transcript.text,
+                    'video_title': uploaded_file.name
+                })
 
-                        # 4: Check if successul
-                        if transcript.status == aai.TranscriptStatus.error:
-                            st.error(f"❌ Transcription failed: {transcript.error}")
-                        else:
-                            st.success(f"✅ Transcription complete!")
-
-                        # Save Transcript info
-                        st.session_state.transcripts.append({
-                            'filename': f"transcript_{i}.txt",
-                            'text': transcript.text,
-                            'video_title': info.get('title', f'video {i}')
-                        })
-
-                    except Exception as e:
-                        st.error(f"❌ Failed to download video {i}: {str(e)}")
-            
-            # Clear links the list
-            st.session_state.links = []         
-        else:
-            st.warning("No links added yet!")
+            except Exception as e:
+                st.error(f"❌ Error processing file {i}: {str(e)}")
+    else:
+        st.warning("No files uploaded yet!")
 
 
-    # Show results
-    if st.session_state.transcripts:
+# Show results
+if st.session_state.transcripts:
 
-        st.write("---")
-        st.write(f"## 🎉 Completed {len(st.session_state.transcripts)} transcript(s)!")
-
-        for i, t in enumerate(st.session_state.transcripts, 1):
-
-
-            st.write(f"### 📄 {t['video_title']}")
-
-            st.download_button(
-                label = f"📥 Download {t['filename']}",
-                data=t['text'],
-                file_name=t['filename'],
-                mime="text/plain",
-                key=f"download_{i}",  # Unique key for each button
-
-            )        
-            # Show proview of first 200 characters
-            with st.expander("Preview transcript"):
-                st.write(t['text'][:200] + "..." if len(t['text']) > 200 else t['text'])
-
-
-# Show current list
-if st.session_state.links:
     st.write("---")
-    st.write("**Current links:**")
-    for i, l in enumerate(st.session_state.links, 1):
-        st.write(f"{i}. {l}")
+    st.write(f"## 🎉 Completed {len(st.session_state.transcripts)} transcript(s)!")
+
+    for i, t in enumerate(st.session_state.transcripts, 1):
+
+
+        st.write(f"### 📄 {t['video_title']}")
+
+        st.download_button(
+            label = f"📥 Download {t['filename']}",
+            data=t['text'],
+            file_name=t['filename'],
+            mime="text/plain",
+            key=f"download_{i}",  # Unique key for each button
+
+        )        
+        # Show proview of first 200 characters
+        with st.expander("Preview transcript"):
+            st.write(t['text'][:200] + "..." if len(t['text']) > 200 else t['text'])
+
+
+
 

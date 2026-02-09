@@ -23,12 +23,21 @@
 - [✅] Session state management to store transcripts
 - [✅] Clear links when all done
 
-## TODO 4 - Deploy MVP
+## TODO 4 - Deploy MVP V1.0
 - [✅] Create requirements.txt
 - [✅] API Key
 - [✅] Deploy on Streamlit cloud
 - [✅] Push to GitHub
 - [✅] Deploy frontend on Streamlit
+- [❌] Check if there's any issue (yt-dlp get blocked on cloud deployments)
+
+## TODO 4 - Ship to user upload audio file (Work perfectly on cloud)
+- [✅] Change input box from link input to upload file
+- [✅] Input accepts multiple file types(mp3, wav, m4a, mp4, webm, ogg)
+- [✅] Bulk upload
+- [✅] Clean up button names
+
+
 ## TODO 5 - ZIP file creation
 
 ## TODO 6 - Error handling (invalid links, duration check, Duplicate Links)
